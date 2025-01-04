@@ -21,7 +21,7 @@ OPTIONS (
 );
 
 -- dim_promotion
-CREATE TABLE (
+CREATE TABLE main.dim_promotion (
     promotion_sk INT64 NOT NULL,
     promotion_id INT64,
     promotion_name STRING,
@@ -66,7 +66,7 @@ CREATE TABLE main.dim_customer (
 	state STRING,
 	country STRING,
 	postal_code INT64,
-	is_current BOOLEAN DEFAULT TRUE,,
+	is_current BOOLEAN DEFAULT TRUE,
 	scd_start_date DATE,
 	scd_end_date DATE,
 	created_at TIMESTAMP,
