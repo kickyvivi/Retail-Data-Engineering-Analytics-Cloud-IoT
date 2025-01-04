@@ -117,7 +117,7 @@ OPTIONS (
 
 -- fact_promotion_sales
 CREATE TABLE main.fact_promotion_sales (
-    promotion_sales_sk INT64 NOT NULL,
+    sales_sk INT64 NOT NULL,
     transaction_id STRING,
     transaction_lineitems ARRAY<STRUCT<
 		transaction_line_id STRING, -- transaction_id + product_id
@@ -130,11 +130,11 @@ CREATE TABLE main.fact_promotion_sales (
     total_sales_amount FLOAT64,
     total_discounted_amount FLOAT64,
     store_sk INT64,
+    register_id INT64,
     customer_sk INT64,
     date_key INT64,
     date DATE,
     audit_sk INT64,
-    register_id INT64,
     sale BOOLEAN,
     sale_timestamp TIMESTAMP,
     settlement BOOLEAN,

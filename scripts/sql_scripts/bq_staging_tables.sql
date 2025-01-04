@@ -85,17 +85,17 @@ OPTIONS (
 
 -- stg_fact_sales
 CREATE TABLE staging.stg_fact_sales(
-	promotion_id INT64,
-	product_id INT64,
-	store_id INT64,
-	customer_id INT64,
-	record_timestamp TIMESTAMP,
-	register_id INT64,
 	transaction_id STRING,
-	record_type STRING,
+	customer_id INT64,	
+	store_id INT64,
+	register_id INT64,
+	product_id INT64,	
+	promotion_id INT64,
 	sales_quantity FLOAT64,
 	sales_amount FLOAT64,
 	discounted_amount FLOAT64,
+	record_type STRING,
+	record_timestamp TIMESTAMP,
 	insert_timestamp TIMESTAMP, 
 	processed_flag BOOLEAN DEFAULT FALSE
 )
