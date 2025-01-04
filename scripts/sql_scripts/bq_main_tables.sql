@@ -62,6 +62,7 @@ CREATE TABLE main.dim_customer (
 	first_name STRING,
 	last_name STRING,
 	email STRING,
+  age INT64,
 	city STRING,
 	state STRING,
 	country STRING,

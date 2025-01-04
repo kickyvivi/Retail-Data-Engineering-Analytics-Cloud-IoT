@@ -56,6 +56,7 @@ CREATE TABLE staging.stg_customer (
 	first_name STRING,
 	last_name STRING,
 	email STRING,
+	age INT64,
 	city STRING,
 	state STRING,
 	country STRING,

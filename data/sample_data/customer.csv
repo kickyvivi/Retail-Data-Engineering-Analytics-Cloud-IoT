@@ -1,0 +1,4 @@
+"customer_id","customer_name","customer_email","age","city","state","country","postal_code"
+"101","John Wick","johnwick@gmail.com","21","buffalo","NY","US","14234"
+"102","Sam Jackson","sam101@yahoo.com","30","amherst","NY","US","12543"
+"103","Gregor Elder","greg1997@hotmail.com","40","hartfort","CT","US","17645"
