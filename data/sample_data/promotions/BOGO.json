@@ -1,0 +1,34 @@
+{
+    "promotion_id": "101",
+    "status": "draft",
+    "created_at": "<TIMESTAMP>",
+    "dates": {
+        "start_date": "2024-01-15",
+        "end_date": "2024-01-20"
+    },
+    "description": {
+        "promotion_type": "BOGO",
+        "promotion_name": "Buy 1 Get 1 Free Cosmetics category"
+    },
+    "promotion_details": {
+        "buy_quantity": "1",
+        "get_quantity": "1",
+        "condition": [
+            {
+                "product_id":  "10001"
+            },
+            {
+                "product_id": "10002"
+            }
+        ],
+        "reward": [
+            {
+                "product_id":  "10003"
+            },
+            {
+                "product_id": "10004"
+            }
+        ],
+        "discount_value": ""
+    }
+}
