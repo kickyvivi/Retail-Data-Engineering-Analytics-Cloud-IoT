@@ -91,7 +91,7 @@ CREATE TABLE staging.stg_fact_sales(
 	sale_date DATE,
 	register_id INT64,
 	transaction_id STRING,
-	record_type STRNG,
+	record_type STRING,
 	sales_quantity FLOAT64,
 	sales_amount FLOAT64,
 	discounted_amount FLOAT64,
