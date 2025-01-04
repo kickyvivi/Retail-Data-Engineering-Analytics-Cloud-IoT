@@ -131,6 +131,7 @@ CREATE TABLE main.fact_promotion_sales (
     store_sk INT64,
     customer_sk INT64,
     date_key INT64,
+    date DATE,
     audit_sk INT64,
     register_id INT64,
     sale BOOLEAN,
@@ -142,8 +143,8 @@ CREATE TABLE main.fact_promotion_sales (
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 )
-PARTITION BY date_key
-CLUSTER BY store_sk, product_sk
+PARTITION BY date
+CLUSTER BY store_sk
 OPTIONS (
     description = "Fact table for promotion sales data"
 );
@@ -160,7 +161,7 @@ CREATE TABLE main.fact_store_sales_weekly (
 	created_at TIMESTAMP,
 	updated_at TIMESTAMP
 )
-PARTITION BY business_period
+PARTITION BY week_start_date
 CLUSTER BY store_sk
 OPTIONS (
 	description = "Fact table for aggregated weekly store sales data"
@@ -184,7 +185,7 @@ OPTIONS (
 CREATE TABLE main.dim_date AS
 WITH calendar AS (
   SELECT
-    DATE_ADD(DATE('2015-12-31'), INTERVAL n DAY) AS curr_date
+    DATE_ADD(DATE('2023-12-31'), INTERVAL n DAY) AS curr_date
   FROM
     UNNEST(GENERATE_ARRAY(1, 3000)) AS n
 )
@@ -232,10 +233,6 @@ SELECT
 FROM
   calendar
 ORDER BY
-  curr_date
-
-OPTIONS (
-	description = "Date dimension"
-);
+  curr_date;
 
 --
