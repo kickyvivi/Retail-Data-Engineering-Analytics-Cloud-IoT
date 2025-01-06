@@ -12,3 +12,10 @@ CREATE TABLE retail_iot_project.stg_store (
     insert_timestamp TIMESTAMP,
     processed_flag CHAR(1) DEFAULT 'N'
 );
+
+CREATE TABLE retail_iot_project.stg_inventory (    
+    product_id NUMBER,
+    store_id NUMBER,
+    stock_level NUMBER,
+	reorder_level NUMBER
+);

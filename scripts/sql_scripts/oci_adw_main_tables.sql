@@ -22,7 +22,7 @@ CREATE TABLE retail_iot_project.dim_inventory (
     store_sk NUMBER,
     stock_level NUMBER,
 	reorder_level NUMBER,
-    is_active CHAR(1) DEFAULT 'Y',
+    is_active CHAR(1) DEFAULT 'Y', --store is active and product is active THEN 'Y' ELSE 'N'
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 );
