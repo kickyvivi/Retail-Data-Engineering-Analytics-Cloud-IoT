@@ -1,0 +1,139 @@
+{
+    "description": "Master data creation and ingestion plan",
+    "version": 1,
+    "feed": [
+        {
+            "feed name": "Product",
+            "feed generation mode": "User + Data generator",
+            "description": "Master data for product details",
+            "fields": "product_id: INT64 | product_name: STRING | category: STRING | subcategory: STRING | brand: STRING | price: FLOAT64 | update_type: STRING",
+            "dependencies": "",            
+            "user generated": {
+                "file name": "masterdata_product_<yyyymmdd>.json",
+                "file type": "json"
+            },
+            "data generator": {
+                "read from": "masterdata_product_<yyyymmdd>.json",
+                "convert to": "csv",
+                "output file name": "raw_product_<yyyymmdd>.csv"
+            },
+            "cadence to staging table": "daily delta load",
+            "cadence to main table": "daily table compare and update or insert",
+            "details": ""
+        },
+        {
+            "feed name": "Customer",
+            "feed generation mode": "User + Data generator",
+            "description": "master data for customer details",
+            "fields": "customer_id: INT64| first_name: STRING| last_name: STRING| email: STRING| age: INT64| city: STRING| state: STRING| country: STRING| postal_code: INT64",
+            "dependencies": "",            
+            "user generated": {
+                "file name": "masterdata_customer_<yyyymmdd>.json",
+                "file type": "json"
+            },
+            "data generator": {
+                "read from": "masterdata_customer_<yyyymmdd>.json",
+                "convert to": "csv",
+                "output file name": "raw_customer_<yyyymmdd>.csv"
+            },
+            "cadence to staging table": "daily delta load",
+            "cadence to main table": "daily slowly changing dimensional update",
+            "details": ""
+        },
+        {
+            "feed name": "store",
+            "feed generation mode": "User",
+            "description": "master data for store details",
+            "fields": "store_id: NUMBER | store_name: VARCHAR2(10) | street: VARCHAR2(200) | city: VARCHAR2(100) | state: VARCHAR2(2) | region: VARCHAR2(50) | country: VARCHAR2(50) | postal_code: NUMBER | store_open_date: DATE | store_close_date: DATE",
+            "dependencies": "",            
+            "user generated": {
+                "file name": "masterdata_store_<yyyymmdd>.csv",
+                "file type": "csv"
+            },
+            "data generator": {
+                "read from": "",
+                "convert to": "",
+                "output file name": ""
+            },
+            "cadence to staging table": "daily full load",
+            "cadence to main table": "daily table compare and update or insert",
+            "details": ""
+        },
+        {
+            "feed name": "inventory",
+            "feed generation mode": "Data generator",
+            "description": "master data for product store inventory details",
+            "fields": "product_id: NUMBER | store_id: NUMBER | stock_level: NUMBER | reorder_level: NUMBER",
+            "dependencies": "BigQuery: [main.dim_product], Oracle ADW: [retail_iot_project.dim_store]",            
+            "user generated": {
+                "file name": "",
+                "file type": ""
+            },
+            "data generator": {
+                "read from": "Product main table in BigQuery and Store main table in Oracle Autonomous Data Warehouse",
+                "convert to": "csv",
+                "output file name": "raw_product_store_inventory_<yyyymmdd>.csv"
+            },
+            "cadence to staging table": "daily full load",
+            "cadence to main table": "daily table compare and update or insert",
+            "details": "Connect to the database main tables for the product_id and store_id, then generate inventory records for all combinations as a full load"
+        },
+        {
+            "feed name": "promotion",
+            "feed generation mode": "Data generator",
+            "description": "json feed file for each promotion in DRAFT state",
+            "fields": "Sample JSON file with structure uploaded for BOGO, $Off and %Off",
+            "dependencies": "BigQuery: [main.dim_product]",            
+            "user generated": {
+                "file name": "",
+                "file type": ""
+            },
+            "data generator": {
+                "read from": "Product main table in BigQuery ",
+                "convert to": "json",
+                "output file name": "Promo_<promo_id>_<YYYYMMDDHHMMSS>.json"
+            },
+            "cadence to staging table": "hourly",
+            "cadence to main table": "hourly table compare and update or insert",
+            "details": "Script to generate one promotion each time it is triggered. User to pass promotion type and number of items required in each promotion. Generate promotions only in DRAFT state."
+        },
+        {
+            "feed name": "sales",
+            "feed generation mode": "Data generator",
+            "description": "master data for sales",
+            "fields": "transaction_id: STRING | customer_id: INT64 | store_id: INT64 | register_id: INT64 | product_id: INT64 | promotion_id: INT64 | sales_quantity: FLOAT64 | sales_amount: FLOAT64 | discounted_amount: FLOAT64 | record_type: STRING | record_timestamp: TIMESTAMP",
+            "dependencies": "BigQuery: [main.dim_customer, main.dim_product, main.dim_promotion, main.dim_promotion_items, main.fact_promotion_sales], Oracle ADW: [retail_iot_project.dim_store]",            
+            "user generated": {
+                "file name": "",
+                "file type": ""
+            },
+            "data generator": {
+                "read from": "Customer, Product, Promotion, Promotion Items and Sales main tables in BigQuery and Store main table in Oracle Autonomous Data Warehouse",
+                "convert to": "csv",
+                "output file name": "raw_transaction_<yyyymmdd>.csv"
+            },
+            "cadence to staging table": "daily delta",
+            "cadence to main table": "daily delta insert",
+            "details": "Generate 3 types of records distinguished by record_type value in [sale, settlement, delivery] for same transaction. New sale record with all details. Settlement record with only transaction_id, record_type, record_timestamp and empty values for other fields for existing data in main.fact_promotion_sales with fact_promotion_sales.settlement as NULL. Delivery record with only transaction_id, record_type, record_timestamp and empty values for other fields for existing data in main.fact_promotion_sales with fact_promotion_sales.delivery as NULL. "
+        },
+        {
+            "feed name": "iot_cart_activity",
+            "feed generation mode": "Data generator",
+            "description": "json feed file for cart interaction with each aisle and checkout",
+            "fields": "Sample JSON file with structure uploaded",
+            "dependencies": "BigQuery: [main.fact_promotion_sales]",            
+            "user generated": {
+                "file name": "",
+                "file type": ""
+            },
+            "data generator": {
+                "read from": "For each transaction in fact_promotion_sales table inserted on current day, generate multiple iot_cart_activity jsons simulating movement through all or few of the aisles and one json for checkout counter. Each aisle represents a product category.",
+                "convert to": "json",
+                "output file name": "iot_<cart_id>_<store_id>_<yyyymmddhhmmss>.json"
+            },
+            "cadence to staging table": "Realtime",
+            "cadence to main table": "daily insert",
+            "details": "Simulated realtime. Messages pushed to kafka topic by another application as soon as the json is placed in directory."
+        }
+    ]
+}

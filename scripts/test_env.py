@@ -3,7 +3,7 @@ import os
 import argparse
 from datetime import datetime
 
-#Initialize argument parser
+#Initialize argument parser: make the script resuable
 parser = argparse.ArgumentParser(description="Test environment by genrating a sample dataset.")
 parser.add_argument("--output_path", type=str, required=True, help="Directory to save the output CSV file.")
 
@@ -11,7 +11,7 @@ parser.add_argument("--output_path", type=str, required=True, help="Directory to
 args = parser.parse_args()
 output_dir = args.output_path
 
-#Ensure the output directory exists
+#Ensure the output directory exists, if not create it
 os.makedirs(output_dir, exist_ok=True)
 
 #Generate sample data
