@@ -1,2 +1,4 @@
 .venv/
-data_generator/config/bigquery_service_account.json
+data_generator/config/
+data_generator/output/
+data_generator/logs/
