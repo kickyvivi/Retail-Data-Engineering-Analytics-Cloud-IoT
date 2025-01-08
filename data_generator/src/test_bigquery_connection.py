@@ -1,4 +1,4 @@
-from dependencies import BigQueryClient
+from io_utils import BigQueryClient
 
 if __name__ == "__main__":
     # Initialize the client
