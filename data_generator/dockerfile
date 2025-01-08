@@ -10,6 +10,22 @@ WORKDIR /app
 # Copies your entire project directory into the container's /app directory.
 COPY . /app
 
+# Install required system packages
+RUN apt-get update && apt-get install -y \
+    libaio1 \
+    build-essential \
+    wget \
+    unzip
+
+# Download and install the Oracle Instant Client
+RUN wget https://download.oracle.com/otn_software/linux/instantclient/2360000/instantclient-basiclite-linux.x64-23.6.0.24.10.zip && \
+    unzip instantclient-basiclite-linux.x64-23.6.0.24.10.zip -d /opt/oracle && \
+    rm -f instantclient-basiclite-linux.x64-23.6.0.24.10.zip
+    
+# Set environment variables for Oracle Instant Client
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_23_6:$LD_LIBRARY_PATH
+ENV PATH=/opt/oracle/instantclient_23_6:$PATH    
+
 # Copy the requirements file into the container
 COPY requirements.txt ./
 
@@ -27,6 +43,10 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV GOOGLE_APPLICATION_CREDENTIALS="/app/config/bigquery_service_account.json"
 
+# Add src directory to PYTHONPATH
+ENV PYTHONPATH=/app
+
 # Default command to run the application
 # Specifies the script to run (src/data_generator.py) as the default command when the container starts.
-CMD ["python", "src/data_generator.py"]
+#CMD ["python", "src/data_generator.py"]
+CMD ["python", "src/test_oracle_connection.py"]

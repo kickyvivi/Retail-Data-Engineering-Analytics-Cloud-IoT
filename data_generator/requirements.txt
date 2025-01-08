@@ -2,3 +2,5 @@ google-cloud-storage
 faker
 python-dotenv
 google-cloud-bigquery
+cx_Oracle
+oracledb
