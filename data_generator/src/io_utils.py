@@ -1,3 +1,6 @@
+import csv
+import shutil
+import os
 import oracledb
 import json
 from google.cloud import bigquery
@@ -62,3 +65,35 @@ class BigQueryClient:
         except Exception as e:
             print(f"Error executing query: {e}")
             return []
+
+def save_to_csv(data, output_dir, file_name):
+    """
+    Save data to a CSV file.
+
+    Args:
+        data (list of dict): Data to save.
+        output_dir (str): Directory to save the file.
+        file_name (str): Name of the file.
+
+    Returns:
+        str: Full path to the saved file.
+    """
+    file_path = os.path.join(output_dir, file_name)
+    with open(file_path, mode="w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=data[0].keys())
+        writer.writeheader()
+        writer.writerows(data)
+    return file_path
+
+def archive_file(file_path, archive_dir):
+    """
+    Move a file to the archive directory.
+
+    Args:
+        file_path (str): Path to the file.
+        archive_dir (str): Archive directory.
+    """
+    os.makedirs(archive_dir, exist_ok=True)
+    shutil.move(file_path, archive_dir)
+    print(f"File archived to {archive_dir}")
+

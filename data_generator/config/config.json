@@ -1,0 +1,6 @@
+{
+    "bigquery": {
+        "project_id": "retail-iot-project",
+        "dataset_id": "main"
+    }
+}
