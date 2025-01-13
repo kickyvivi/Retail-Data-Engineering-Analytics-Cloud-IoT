@@ -214,3 +214,5 @@
 | is_active         | CHAR(1)        |               |
 | created_at        | TIMESTAMP      |               |
 | updated_at        | TIMESTAMP      |               | 
+
+---
