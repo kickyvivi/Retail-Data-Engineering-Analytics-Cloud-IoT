@@ -1,0 +1,13 @@
+{
+  "description" : "Batch data pipelines for loading the masterdata and facts to staging and main tables in BigQuery and oCI ADW",
+  "company" : "UB",
+  "department" : "MIS",
+  "metadataBaseFolder" : "${PROJECT_HOME}/metadata",
+  "unitTestsBasePath" : "${PROJECT_HOME}",
+  "dataSetsCsvFolder" : "${PROJECT_HOME}/datasets",
+  "enforcingExecutionInHome" : true,
+  "parentProjectName" : "samples",
+  "config" : {
+    "variables" : [ ]
+  }
+}
