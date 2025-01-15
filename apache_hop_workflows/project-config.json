@@ -1,5 +1,5 @@
 {
-  "description" : "Batch data pipelines for loading the masterdata and facts to staging and main tables in BigQuery and oCI ADW",
+  "description" : "Batch data pipelines for loading the masterdata and facts to staging and main tables in BigQuery and OCI ADW",
   "company" : "UB",
   "department" : "MIS",
   "metadataBaseFolder" : "${PROJECT_HOME}/metadata",
