@@ -79,10 +79,22 @@ def save_to_csv(data, output_dir, file_name):
         str: Full path to the saved file.
     """
     file_path = os.path.join(output_dir, file_name)
-    with open(file_path, mode="w", newline="") as file:
+    
+    # Write the CSV file normally
+    temp_file_path = file_path + ".tmp"
+    with open(temp_file_path, mode="w", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=data[0].keys())
         writer.writeheader()
         writer.writerows(data)
+
+    # Read the file and add a space after commas
+    with open(temp_file_path, mode="r") as file, open(file_path, mode="w", newline="") as final_file:
+        for line in file:
+            final_file.write(line.replace(",", ", "))
+
+    # Remove the temporary file
+    os.remove(temp_file_path)
+    
     return file_path
 
 def archive_file(file_path, archive_dir):
