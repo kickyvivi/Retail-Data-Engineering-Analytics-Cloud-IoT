@@ -1,0 +1,71 @@
+{
+  "enclosure": "\"",
+  "name": "Customer Input",
+  "description": "",
+  "fieldDefinitions": [
+    {
+      "hopType": "Integer",
+      "precision": -1,
+      "length": -1,
+      "name": "customer_id",
+      "formatMask": ""
+    },
+    {
+      "hopType": "String",
+      "precision": -1,
+      "length": -1,
+      "name": "first_name",
+      "formatMask": ""
+    },
+    {
+      "hopType": "String",
+      "precision": -1,
+      "length": -1,
+      "name": "last_name",
+      "formatMask": ""
+    },
+    {
+      "hopType": "String",
+      "precision": -1,
+      "length": -1,
+      "name": "email",
+      "formatMask": ""
+    },
+    {
+      "hopType": "Integer",
+      "precision": -1,
+      "length": -1,
+      "name": "age",
+      "formatMask": ""
+    },
+    {
+      "hopType": "String",
+      "precision": -1,
+      "length": -1,
+      "name": "city",
+      "formatMask": ""
+    },
+    {
+      "hopType": "String",
+      "precision": -1,
+      "length": -1,
+      "name": "state",
+      "formatMask": ""
+    },
+    {
+      "hopType": "String",
+      "precision": -1,
+      "length": -1,
+      "name": "country",
+      "formatMask": ""
+    },
+    {
+      "hopType": "Integer",
+      "precision": -1,
+      "length": -1,
+      "name": "postal_code",
+      "formatMask": ""
+    }
+  ],
+  "separator": ","
+}

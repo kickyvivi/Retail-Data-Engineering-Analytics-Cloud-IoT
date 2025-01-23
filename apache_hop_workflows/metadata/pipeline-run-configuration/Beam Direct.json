@@ -1,0 +1,18 @@
+{
+  "engineRunConfiguration": {
+    "BeamDirectPipelineEngine": {
+      "tempLocation": "file:///tmp",
+      "streamingHopTransformsBufferSize": "",
+      "fatJar": "C:\\apache-hop-client-2.9.0\\hop\\config\\hop fat.jar",
+      "number_of_workers": "4",
+      "userAgent": "Hop",
+      "streamingHopTransformsFlushInterval": ""
+    }
+  },
+  "defaultSelection": false,
+  "configurationVariables": [],
+  "name": "Beam Direct",
+  "description": "Beam direct engine",
+  "dataProfile": "",
+  "executionInfoLocationName": ""
+}
