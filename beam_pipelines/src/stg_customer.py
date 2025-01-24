@@ -12,7 +12,7 @@ config = load_config(GCS_CONFIG_PATH)
 pipeline_config = config["gcs"]["stg_customer"]
 
 # Setup logger
-logger = setup_logger('logs/pipelines/stg_customer.log')
+logger = setup_logger('logs/pipeline/stg_customer.log')
 logger.info(f"Loaded configuration: {pipeline_config}")
 
 # Define the pipeline options
