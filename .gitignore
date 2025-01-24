@@ -3,3 +3,6 @@ data_generator/config/
 data_generator/output/
 data_generator/logs/
 data_generator/src/__pycache__
+beam_pipelines/pilot/sample.py
+logs/
+config/
