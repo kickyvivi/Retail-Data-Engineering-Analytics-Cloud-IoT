@@ -6,8 +6,9 @@ from datetime import datetime
 class BeamOptions(PipelineOptions):
     @classmethod
     def _add_argparse_args(cls, parser):
-        parser.add_argument('--input', required=True, help='GCS input file path')
-        parser.add_argument('--output_table', required=True, help='BigQuery output table')
+        parser.add_argument('--input', default='gs://retail-iot-project-data/output/customer/raw_customer_20250115.csv', help='GCS input file path')
+        parser.add_argument('--output_table', default='retail-iot-project:staging.stg_customer' , help='BigQuery output table')
+        parser.add_argument('--temp_location', default='gs://retail-iot-project-data/tmp' , help='GCS temporary file location for BigQuery write operations')
 
 # Function to transform the data
 def transform_data(row):
@@ -22,7 +23,7 @@ def transform_data(row):
         'state': fields[6],
         'country': fields[7],
         'postal_code': fields[8],
-        'insert_timestamp': datetime.utcnow().isoformat(),
+        'insert_timestamp': datetime.now(datetime.timezone.utc).isoformat(),
         'processed_flag': 'FALSE'
     }
 
