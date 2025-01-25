@@ -4,6 +4,8 @@ from apache_beam.metrics import Metrics
 import datetime as datetime
 from common.src.config_loader import load_config
 from common.src.logging_config import setup_logger
+from beam_pipelines.validation.screens import StgCustomerValidation
+import os
 
 # Configuration path
 GCS_CONFIG_PATH = "beam_pipelines/config/config.json"
@@ -21,6 +23,9 @@ logger.info(f"Loaded configuration: {pipeline_config}")
 processed_rows = Metrics.counter('stg_customer', 'processed_rows')
 error_rows = Metrics.counter('stg_customer', 'error_rows')
 
+# Initiliaze validation class
+validator = StgCustomerValidation()
+
 # Define the pipeline options
 class BeamOptions(PipelineOptions):
     @classmethod
@@ -29,11 +34,11 @@ class BeamOptions(PipelineOptions):
         parser.add_argument('--output_table', default=pipeline_config["output_table"] , help='BigQuery output table')
 
 # Function to transform the data
-def transform_data(row):
+def transform_and_validate(row):
     try:
         fields = row.split(',')
         processed_rows.inc() # Increment the processed rows counter
-        return {
+        data = {
             'customer_id': int(fields[0]),
             'first_name': fields[1],
             'last_name': fields[2],
@@ -43,9 +48,19 @@ def transform_data(row):
             'state': fields[6],
             'country': fields[7],
             'postal_code': fields[8],
-            'insert_timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            'processed_flag': 'FALSE'
         }
+
+        # Validate and correct data
+        corrected_row, errors = validator.validate_and_correct_row(data)
+
+        if errors:
+            logger.warnning(f"Validation error for row: {row} | Errors: {errors}")
+
+        # Add insert_timestamp and processed_flag to validated data
+        corrected_row.update({'insert_timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'processed_flag': 'FAlSE'})
+
+        return corrected_row
+        
     except Exception as e:
         error_rows.inc() # Increment the error rows counter
         logger.error(f"Error processing row: {row}. Error: {e}")
@@ -66,6 +81,20 @@ def run(argv=None):
     options.view_as(PipelineOptions).view_as(beam.options.pipeline_options.StandardOptions).runner = runner
     options.view_as(PipelineOptions).view_as(beam.options.pipeline_options.GoogleCloudOptions).temp_location = temp_location
 
+    # File validation
+    try:
+        validator.validate_file(
+            file_path=input_path,
+            expected_columns=['customer_id', 'first_name', 'last_name', 'email', 'age','city', 'state', 'country', 'postal_code'],
+            filename_template=r'raw_customer_\d{8}\.csv'
+        )
+    except ValueError as e:
+        logger.error(f"File validation failed: {e}")
+        return
+
+    logger.info("File validation passed. Starting pipeline execution.")
+    
+    # Pipeline execution
     try:
         logger.info(f"Pipeline started with Runner: {runner}, Temp Location: {temp_location}, Input Path: {input_path}, Output Table: {output_table}")
         
@@ -73,7 +102,8 @@ def run(argv=None):
             (
                 p
                 | "Read CSV from GCS" >> beam.io.ReadFromText(input_path, skip_header_lines=1)
-                | "Transform Data" >> beam.Map(transform_data)
+                | "Transform and validate Data" >> beam.Map(transform_and_validate)
+                | "Filter invalid rows" >> beam.Filter(lambda x: x is not None)
                 | "Write to BigQuery" >> beam.io.WriteToBigQuery(
                     output_table,
                     schema=(
