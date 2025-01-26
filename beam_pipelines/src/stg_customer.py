@@ -4,6 +4,7 @@ from apache_beam.metrics import Metrics
 import datetime as datetime
 from common.src.config_loader import load_config
 from common.src.logging_config import setup_logger
+from common.src.list_files_gcs_bucket import get_file_from_bucket
 from beam_pipelines.validation.screens import StgCustomerValidation
 import os
 
@@ -20,11 +21,8 @@ logger.info("********Execution Started********")
 logger.info(f"Loaded configuration: {pipeline_config}")
 
 # Setup Metrics
-processed_rows = Metrics.counter('stg_customer', 'processed_rows')
-error_rows = Metrics.counter('stg_customer', 'error_rows')
-
-# Initiliaze validation class
-validator = StgCustomerValidation()
+#processed_rows = Metrics.counter('stg_customer', 'processed_rows')
+#error_rows = Metrics.counter('stg_customer', 'error_rows')
 
 # Define the pipeline options
 class BeamOptions(PipelineOptions):
@@ -33,6 +31,7 @@ class BeamOptions(PipelineOptions):
         parser.add_argument('--input', default=pipeline_config["input_path"], help='GCS input file path')
         parser.add_argument('--output_table', default=pipeline_config["output_table"] , help='BigQuery output table')
 
+"""
 # Function to transform the data
 def transform_and_validate(row):
     try:
@@ -65,6 +64,38 @@ def transform_and_validate(row):
         error_rows.inc() # Increment the error rows counter
         logger.error(f"Error processing row: {row}. Error: {e}")
         return None
+"""
+# Custom DoFn for validation and transnsformation
+class ValidateAndTransformFn(beam.DoFn):
+    def __init__(self, validation_class):
+        self.validation_class = validation_class
+        # Setup metrics
+        self.processed_counter = Metrics.counter("stg_customer", "processed_rows")
+        self.error_counter = Metrics.counter("stg_customer", "error_rows")
+        self.warning_counter = Metrics.counter("stg_customer", "warning_rows")
+
+    def process(self, element):
+        try:
+            row_data = dict(zip(
+                ["customer_id", "first_name", "last_name", "email", "age", "city", "state", "country", "postal_code"],
+                element.split(",")
+            ))
+            validated_row, errors = self.validation_class.validate_and_correct_row(row_data)
+
+            # Add insert_timestamp and processed_flag to validated data
+            validated_row.update({'insert_timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'processed_flag': 'FAlSE'})
+
+            if errors:
+                self.warning_counter.inc()      # Warning when column screens fail, but row is processed with or without data correction
+                self.processed_counter.inc()    # Row is processed after error correction
+                logger.warning(f"Row Warnings: {errors} | Data: {element}")
+                yield validated_row             # yield row for further processing
+            else:
+                self.processed_counter.inc()
+                yield validated_row
+        except Exception as e:
+            self.error_counter.inc()
+            logger.error(f"Critical error during row validation: {e} | Row: {element}")
 
 # Main pipeline
 def run(argv=None):
@@ -81,15 +112,37 @@ def run(argv=None):
     options.view_as(PipelineOptions).view_as(beam.options.pipeline_options.StandardOptions).runner = runner
     options.view_as(PipelineOptions).view_as(beam.options.pipeline_options.GoogleCloudOptions).temp_location = temp_location
 
+    # Initiliaze validation class
+    validator = StgCustomerValidation()
+
+    # Get file to process
+    input_file = get_file_from_bucket(
+        bucket_path=input_path,
+        filename_template=r'raw_customer_\d{8}\.csv'
+    )
+
+    if not input_file:
+        logger.error(f"No file found matching the template in gcs path: {input_path}")
+        return
+    
+    logger.info(f"Processing file: {input_file}")
+
     # File validation
     try:
-        validator.validate_file(
-            file_path=input_path,
-            expected_columns=['customer_id', 'first_name', 'last_name', 'email', 'age','city', 'state', 'country', 'postal_code'],
+        logger.info(f"Validating file: {input_file}")
+        file_validaton_result = validator.validate_file(
+            file_path=input_file,
+            expected_columns=[
+                'customer_id', 'first_name', 'last_name', 'email', 'age','city', 'state', 'country', 'postal_code'
+            ],
             filename_template=r'raw_customer_\d{8}\.csv'
         )
+        if not file_validaton_result:
+            logger.error(f"File validation returned False. Stopping pipeline execution.")
+            return
+
     except ValueError as e:
-        logger.error(f"File validation failed: {e}")
+        logger.error(f"Critical error during file validation: {e}")
         return
 
     logger.info("File validation passed. Starting pipeline execution.")
@@ -102,7 +155,7 @@ def run(argv=None):
             (
                 p
                 | "Read CSV from GCS" >> beam.io.ReadFromText(input_path, skip_header_lines=1)
-                | "Transform and validate Data" >> beam.Map(transform_and_validate)
+                | "Validate and Transform Data" >> beam.ParDo(ValidateAndTransformFn(validator))
                 | "Filter invalid rows" >> beam.Filter(lambda x: x is not None)
                 | "Write to BigQuery" >> beam.io.WriteToBigQuery(
                     output_table,
@@ -118,7 +171,8 @@ def run(argv=None):
             )
         # Wait for pipeline exeucution to complete before retrieving metrics
         logger.info("Write to BigQuery executed. Waiting for pipeline to complete.")
-        result = p.run()
+        #result = p.run()   # Not required as pipeline is executed inside the 'with' context
+        result = p.result   # Retrieving metrics directly 
         result.wait_until_finish()
 
         # Retrieving metrics
@@ -130,13 +184,19 @@ def run(argv=None):
             beam.metrics.MetricsFilter().with_name("error_rows")
         )['counters']
 
+        warning_metric = result.metrics().query(
+            beam.metrics.MetricsFilter().with_name("warning_rows")
+        )['counters']
+
         processed_count = processed_metric[0].committed if processed_metric else 0
         error_count = error_metric[0].committed if error_metric else 0
-        total_count = processed_count + error_count
+        warning_count = warning_metric[0].committed if warning_metric else 0
+        total_count = processed_metric[0].attempted if processed_metric else (processed_count + error_count + warning_count)
         
         logger.info("Pipeline execution completed successfully.")
         logger.info(f"Total rows: {total_count}")
         logger.info(f"Total processed rows: {processed_count}")
+        logger.info(f"Total warning rows: {warning_count}")
         logger.info(f"Total error rows: {error_count}")
     except Exception as e:
         logger.error(f"Pipeline failed with error: {e}", exc_info=True)

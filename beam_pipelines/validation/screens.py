@@ -30,11 +30,11 @@ Some data is corrected or defaulted when data is not matching the quality checks
 import os
 import re
 import logging
+from apache_beam.io.filesystems import FileSystems
 
 class StgCustomerValidation:
-    columns_count = None
-
     def __init__(self, severity_levels = None):
+        self.columns_count = None
         # Initialize with the severity levels for validation
         self.severity_levels = severity_levels or {
             "file_missing": "Fail-Fail",
@@ -51,45 +51,66 @@ class StgCustomerValidation:
 
     # ----------------FILE VALIDATION----------------
     def validate_file(self, file_path, expected_columns, filename_template):
+        # Validate file structure and format
         self.columns_count = len(expected_columns)
 
+        """
         if not os.path.exists(file_path):
             self._handle_error("File missing", "file_missing")
+        """
+        # Check if file exists in GCS
+        match_result = list(FileSystems.match([file_path]))
+        if not match_result or not match_result[0].metadata_list:
+            self._handle_error("File missing", "file_missing")
 
+        """
         if not re.match(filename_template, os.path.basename(file_path)):
-            self._handle_eror("File name does not match the template", "filename_template")
+            self._handle_error("File name does not match the template", "filename_template")
+        """
+        # Validate file name
+        file_name = file_path.split("/")[-1]
+        if not re.match(filename_template, file_name):
+            self._handle_error("File name does not match the template", "filename_template")
 
+        """
         with open(file_path, "r") as file:
             lines = file.readlines(2)
+        """
+        # Read file content from GCS
+        with FileSystems.open(file_path) as file:
+            lines = [line.decode("utf-8") for line in file.readlines(2)]
 
-        if not lines:
-            self._handle_error("Empty file", "empty_file")
+        if not lines or len(lines) == 1:
+            self._handle_error("Empty file or only header line", "empty_file")
 
         header = lines[0].strip().split(",")
         if header != expected_columns:
             self._handle_error("Missing or mismatched columns in file header", "missing_column_header")
 
+        return True
+
     # ----------------COLUMN SCREENS----------------
     def validate_and_correct_row(self, row):
+        # Validate and correct individual rows
         errors = []
 
-        if not row.len() == self.columns_count:
+        if not len(row) == self.columns_count:
             self._handle_error("Missing columns in row", "missing_column_data")
 
-        if not re.match(r"^[^@]+@[^@]+\.[^@]+$", row["email"]):
+        if not re.match(r"^[^@]+@[^@]+\.[^@]+$", row.get("email", "")):
             errors.append("Invalid email format")
 
-        if row["state"] not in {"NY", "CA", "TX", "FL", "IL"}:
+        if row.get("state") not in {"NY", "CA", "TX", "FL", "IL"}:
             row["state"] = "DF" # Corrective action: Default state code to DF
-            errors.append("Invalid state code")
+            errors.append("Invalid state code, defaulted to DF")
 
-        if row["country"] != "US":
+        if row.get("country") != "US":
             row["country"] = "US" # Corrective action: Default country code to US
-            errors.append("Invalid country")
+            errors.append("Invalid country, defaulted to US")
 
-        if len(row["postal_code"]) != 5 or not row["postal_code"].isdigit():
-            row["postal_code"] = "00000"
-            errors.append("Invalid postal code length")
+        if len(row.get("postal_code", "")) != 5 or not row["postal_code"].isdigit():
+            row["postal_code"] = "00000" # Corrective action: Default postal code to 00000
+            errors.append("Invalid postal code, defaulted to 00000")
 
         return row, errors
 
