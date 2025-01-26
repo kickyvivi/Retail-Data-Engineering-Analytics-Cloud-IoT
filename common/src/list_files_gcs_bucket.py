@@ -1,3 +1,6 @@
+from google.cloud import storage
+import re
+
 # Function to list files in GCS bucket
 def get_file_from_bucket(bucket_path, filename_template):
     """Retrieve the first file matching the template from the bucket."""
@@ -15,4 +18,4 @@ def get_file_from_bucket(bucket_path, filename_template):
         if re.match(filename_template, blob.name.split("/")[-1]):
             return f"gs://{bucket_name}/{blob.name}"
     
-    return None
+    return None 
