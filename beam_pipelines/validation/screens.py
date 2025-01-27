@@ -96,6 +96,8 @@ class StgCustomerValidation:
 
         if not len(row) == self.columns_count:
             self._handle_error("Missing columns in row", "missing_column_data")
+            errors.append("Row missing column data")
+            return row, errors
 
         if not re.match(r"^[^@]+@[^@]+\.[^@]+$", row.get("email", "")):
             errors.append("Invalid email format")
@@ -109,8 +111,8 @@ class StgCustomerValidation:
             errors.append("Invalid country, defaulted to US")
 
         if len(row.get("postal_code", "")) != 5 or not row["postal_code"].isdigit():
-            row["postal_code"] = "00000" # Corrective action: Default postal code to 00000
-            errors.append("Invalid postal code, defaulted to 00000")
+            row["postal_code"] = "10000" # Corrective action: Default postal code to 10000
+            errors.append("Invalid postal code, defaulted to 10000")
 
         return row, errors
 

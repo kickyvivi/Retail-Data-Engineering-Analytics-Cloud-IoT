@@ -86,10 +86,14 @@ class ValidateAndTransformFn(beam.DoFn):
             validated_row.update({'insert_timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'processed_flag': 'FAlSE'})
 
             if errors:
-                self.warning_counter.inc()      # Warning when column screens fail, but row is processed with or without data correction
-                self.processed_counter.inc()    # Row is processed after error correction
-                logger.warning(f"Row Warnings: {errors} | Data: {element}")
-                yield validated_row             # yield row for further processing
+                if errors[0] == "Row missing column data":
+                    # self.error_counter.inc()        
+                    raise ValueError(errors[0])     # When the row is missing columns
+                else:
+                    self.warning_counter.inc()      # Warning when column screens fail, but row is processed with or without data correction
+                    self.processed_counter.inc()    # Row is processed after error correction
+                    logger.warning(f"Row Warnings: {errors} | Data: {element}")
+                    yield validated_row             # yield row for further processing
             else:
                 self.processed_counter.inc()
                 yield validated_row
@@ -191,7 +195,7 @@ def run(argv=None):
         processed_count = processed_metric[0].committed if processed_metric else 0
         error_count = error_metric[0].committed if error_metric else 0
         warning_count = warning_metric[0].committed if warning_metric else 0
-        total_count = processed_metric[0].attempted if processed_metric else (processed_count + error_count + warning_count)
+        total_count = processed_count + error_count
         
         logger.info("Pipeline execution completed successfully.")
         logger.info(f"Total rows: {total_count}")
