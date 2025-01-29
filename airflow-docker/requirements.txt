@@ -1,0 +1,7 @@
+google-cloud-bigquery
+apache-airflow-providers-google
+pandas
+pyarrow
+loguru
+apache-airflow-providers-smtp
+
