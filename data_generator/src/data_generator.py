@@ -1,13 +1,13 @@
 import os
 import dependencies
+from parameter_parser import parse_arguments
 
-# Access the config file
-config_path = os.path.join("config", "config.json")
+# Parse arguments and generate feed file
+args = parse_arguments()
 
-# Save output files
-output_path = os.path.join("output", "customer", "customer_data.csv")
-
-# Test script
-print("Hello world")
-
-print(fet)
+if args.feed == "customer":
+    # Import the customer feed module and calls the function to generate the data
+    from customer_feed import generate_customer_feed
+    generate_customer_feed()
+else:
+    print(f"Feed type: {args.feed} not implemented in this data generator. List of supported feeds: customer, product, store, inventory, promo, transactions, iot")
