@@ -28,3 +28,9 @@
 
 ## Deep dive into docker compose
 - https://dev.to/alexmercedcoder/a-deep-dive-into-docker-compose-27h5
+
+## Bind host docker socket to container
+- https://docs.docker.com/extensions/extensions-sdk/guides/use-docker-socket-from-backend/?uuid=4F9ED11B-7E18-450A-B94B-898C59406E64
+
+## Apache airflow providers docker
+- https://airflow.apache.org/docs/apache-airflow-providers-docker/stable/connections/docker.html

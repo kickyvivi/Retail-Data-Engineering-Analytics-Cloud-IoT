@@ -4,20 +4,27 @@ from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesyste
 from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
 from airflow.models import Variable
+from docker.types import Mount
 import os
 
 # Initialize PROJECT_HOME
-PROJECT_HOME = Variable.get('PROJECT_HOME')
+PROJECT_HOME_AIRFLOW = Variable.get('PROJECT_HOME_AIRFLOW')
+SHARED_VOLUME_AIRFLOW = os.path.join(PROJECT_HOME_AIRFLOW, 'shared-volume/customer/')
+PROJECT_HOME_HOST = Variable.get('PROJECT_HOME_HOST')
 
-# output_direcotory = os.path.join(PROJECT_HOME, "shared-volume/output/customer")
-# file_path = os.path.join(output_direcotory, "raw_customer_{{ ds_nodash }}.csv")
+# Path relative to container using shared volume
+output_directory_host = os.path.join(PROJECT_HOME_HOST, "shared-volume/output/customer")
+file_path_airflow = os.path.join(SHARED_VOLUME_AIRFLOW, "raw_customer_{{ ds_nodash }}.csv")
 
-# Convert Windows path to UNIX-compatible path for Docker
-output_directory = os.path.abspath(os.path.join(PROJECT_HOME, "shared_volume/output/customer"))
-output_directory = output_directory.replace("\\", "/")  # Ensures compatibility
+# Setup mount for data generator container
+mounts = [
+    Mount(
+        target="/app/data_generator/output/customer/",  # Path inside the container
+        source=output_directory_host,                        # Path on the host - airflow container
+        type="bind"                                     # Type of mount
+    )
+]
 
-file_path = os.path.join(output_directory, "raw_customer_{{ ds_nodash }}.csv")
-file_path = file_path.replace("\\", "/")  # Convert to UNIX format
 
 # Default arguments
 default_args = {
@@ -52,13 +59,13 @@ with DAG(
         command='python -m data_generator.src.data_generator --feed customer --records 100',
         docker_url='unix://var/run/docker.sock',
         network_mode='bridge',
-        volumes=[f"{output_directory}:/app/data_generator/output/customer"]
+        mounts=mounts
     )
 
     # Task 2: Upload the generated data to GCS
     upload_to_gcs = LocalFilesystemToGCSOperator(
         task_id='upload_to_gcs',
-        src=file_path,
+        src=file_path_airflow,
         dst='output/customer/raw_customer_{{ ds_nodash }}.csv',
         bucket='retail-iot-project-data',
         gcp_conn_id="google_cloud_default"
@@ -67,7 +74,7 @@ with DAG(
     # Task 3: Cleanup local files after upload
     cleanup = BashOperator(
         task_id='cleanup_local_file',
-        bash_command=f'rm -f {file_path}'
+        bash_command=f'rm -f {file_path_airflow}'
     )
 
     # Set task dependencies
