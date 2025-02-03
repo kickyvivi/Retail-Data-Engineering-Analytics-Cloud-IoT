@@ -9,7 +9,7 @@ import os
 
 # Initialize PROJECT_HOME
 PROJECT_HOME_AIRFLOW = Variable.get('PROJECT_HOME_AIRFLOW')
-SHARED_VOLUME_AIRFLOW = os.path.join(PROJECT_HOME_AIRFLOW, 'shared-volume/customer/')
+SHARED_VOLUME_AIRFLOW = os.path.join(PROJECT_HOME_AIRFLOW, 'shared-volume/output/customer/')
 PROJECT_HOME_HOST = Variable.get('PROJECT_HOME_HOST')
 
 # Path relative to container using shared volume
