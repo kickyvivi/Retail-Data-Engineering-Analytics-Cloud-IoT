@@ -3,7 +3,7 @@ import logging
 from faker import Faker
 from datetime import datetime
 from io_utils import BigQueryClient, save_to_csv, archive_file
-from config_loader import load_config
+from common.src.config_loader import load_config
 import random  # Import Python's random library
 
 # Initialize Faker

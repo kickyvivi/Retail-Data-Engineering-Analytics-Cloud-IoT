@@ -1,16 +1,33 @@
+"""
+customer_feed.py
+
+This script creates the customer feed. It is triggered by the data_generator.py container.
+It accepts parameters for:
+  - feed: The name of the feed (e.g., customer_feed, transaction_feed, promo_feed)
+  - records: Number of records to process
+
+The script parses these parameters, and simulates the processing of the feed by logging each record's processing.
+
+"""
+
 import os
 from faker import Faker
 import logging
 from datetime import datetime
-from io_utils import BigQueryClient, save_to_csv, archive_file
+from data_generator.src.io_utils import BigQueryClient, save_to_csv # archiving file is moved out of scope and will be implemented in the airflow DAG
 # from dependencies import fetch_customer_data
-from config_loader import load_config
+from common.src.config_loader import load_config
+from data_generator.src.parameter_parser import parse_arguments
 
 # Initialize Faker
 fake = Faker()
 
+# Receive parameters: Record count
+args = parse_arguments()
+records = int(args.records)
+
 # Config paths
-BIGQUERY_CONFIG_PATH = "config/config.json"
+BIGQUERY_CONFIG_PATH = "data_generator/config/config.json"
 
 # Load configurations
 bigquery_config = load_config(BIGQUERY_CONFIG_PATH)
@@ -18,7 +35,7 @@ project_id = bigquery_config["bigquery"]["project_id"]
 dataset_id = bigquery_config["bigquery"]["dataset_id"]
 
 # Directories
-OUTPUT_DIR = "output/customer/"
+OUTPUT_DIR = "data_generator/output/customer/"
 ARCHIVE_DIR = os.path.join(OUTPUT_DIR, "archive/")
 
 # Ensure directories exist
@@ -70,7 +87,7 @@ def generate_customer_feed():
                 "country": "US",
                 "postal_code": fake.zipcode(),
             }
-            for i in range(100)
+            for i in range(records)
         ]
         logger.info(f"Generated {len(new_customer_data)} new customer records.")
 
@@ -81,8 +98,8 @@ def generate_customer_feed():
         logger.info(f"Customer feed saved to {file_path}.")
 
         # Archive the file (simulate post-ingestion retention)
-        archive_file(file_path, ARCHIVE_DIR)
-        logger.info(f"Customer feed archived to {ARCHIVE_DIR}.")
+        # archive_file(file_path, ARCHIVE_DIR)
+        # logger.info(f"Customer feed archived to {ARCHIVE_DIR}.")
 
         print(f"Customer feed generated and saved to {file_path}")
         logger.info("Customer feed generation completed successfully.")

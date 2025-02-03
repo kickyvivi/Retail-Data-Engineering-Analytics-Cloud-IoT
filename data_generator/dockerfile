@@ -8,7 +8,8 @@ WORKDIR /app
 
 # Copy the entire project directory into the container
 # Copies your entire project directory into the container's /app directory.
-COPY . /app
+COPY data_generator/ /app/data_generator/
+COPY common/ /app/common/
 
 # Install required system packages
 RUN apt-get update && apt-get install -y \
@@ -27,26 +28,26 @@ ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_23_6:$LD_LIBRARY_PATH
 ENV PATH=/opt/oracle/instantclient_23_6:$PATH    
 
 # Copy the requirements file into the container
-COPY requirements.txt ./
+COPY data_generator/requirements.txt ./
 
 # Install Python dependencies
 # Installs the required Python packages from the requirements.txt file. The --no-cache-dir option avoids caching, reducing image size.
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the project files into the container
-COPY . .
+# COPY . .
 
 # Set environment variables for Python (optional but recommended)
 # PYTHONDONTWRITEBYTECODE=1: Prevents .pyc files from being written to disk, keeping the container clean.
 # PYTHONUNBUFFERED=1: Ensures output is logged in real-time rather than being buffered.
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV GOOGLE_APPLICATION_CREDENTIALS="/app/config/bigquery_service_account.json"
+ENV GOOGLE_APPLICATION_CREDENTIALS="/app/data_generator/config/bigquery_service_account.json"
 
 # Add src directory to PYTHONPATH
 ENV PYTHONPATH=/app
 
 # Default command to run the application
 # Specifies the script to run (src/data_generator.py) as the default command when the container starts.
-#CMD ["python", "src/data_generator.py"]
-CMD ["python", "src/test_oracle_connection.py"]
+CMD ["python", "data_generator/src/data_generator.py"]
+#CMD ["python", "data_generator/src/test_oracle_connection.py"]
