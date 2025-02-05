@@ -35,5 +35,8 @@
 ## Apache airflow providers docker
 - https://airflow.apache.org/docs/apache-airflow-providers-docker/stable/connections/docker.html
 
+## Build custom apache airflow image to support dependencies - apache-beam[gcp]
+- https://dkangra.medium.com/apache-airflow-install-and-configure-airflow-using-docker-891d1b604556
+
 ## Google cloud connection
 - https://airflow.apache.org/docs/apache-airflow-providers-google/stable/connections/gcp.html#note-on-application-default-credentials
