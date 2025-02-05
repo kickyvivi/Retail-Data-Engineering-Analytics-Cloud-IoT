@@ -34,3 +34,6 @@
 
 ## Apache airflow providers docker
 - https://airflow.apache.org/docs/apache-airflow-providers-docker/stable/connections/docker.html
+
+## Google cloud connection
+- https://airflow.apache.org/docs/apache-airflow-providers-google/stable/connections/gcp.html#note-on-application-default-credentials

@@ -1,4 +1,5 @@
 from airflow import DAG
+from airflow.datasets import Dataset
 from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesystemToGCSOperator
 from airflow.operators.bash import BashOperator
@@ -74,7 +75,8 @@ with DAG(
     # Task 3: Cleanup local files after upload
     cleanup = BashOperator(
         task_id='cleanup_local_file',
-        bash_command=f'rm -f {file_path_airflow}'
+        bash_command=f'rm -f {file_path_airflow}',
+        outlets=[Dataset("customer_feed_dataset")]
     )
 
     # Set task dependencies
